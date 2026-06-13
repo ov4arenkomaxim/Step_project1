@@ -9,7 +9,7 @@ apt-get update -qq
 apt-get install -y mysql-server
 
 
-sed -i "s/^bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
+sed -i "s/^bind-address.*/bind-address = 192.168.56.10/" /etc/mysql/mysql.conf.d/mysqld.cnf
 
 
 systemctl enable mysql
@@ -18,7 +18,8 @@ systemctl restart mysql
 
 
 mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
-mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';"
+mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'192.168.56.20' IDENTIFIED BY '${DB_PASS}';"
+mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'192.168.56.20';"
 mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';"
 mysql -e "FLUSH PRIVILEGES;"
 
