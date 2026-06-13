@@ -1,0 +1,48 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-22.04"
+  config.ssh.insert_key = false
+
+  # Машина для датабази
+  config.vm.define "db" do |db|
+    db.vm.hostname = "db-vm"
+    db.vm.network "private_network", ip: "192.168.56.10"
+    db.vm.network "forwarded_port", guest: 22, host: 2222, id: "ssh", auto_correct: true
+
+    db.vm.provider "virtualbox" do |vb|
+      vb.name = "DB_VM"
+      vb.memory = "1024"
+      vb.cpus = 1
+    end
+
+    db.vm.provision "shell", path: "provision_db.sh", env: {
+      "DB_USER" => ENV['DB_USER'] || "petclinic",
+      "DB_PASS" => ENV['DB_PASS'] || "petclinic",
+      "DB_NAME" => ENV['DB_NAME'] || "petclinic"
+    }
+  end
+
+  # Друга машина для застосунку
+  config.vm.define "app" do |app|
+    app.vm.hostname = "app-vm"
+    app.vm.network "private_network", ip: "192.168.56.20"
+    app.vm.network "forwarded_port", guest: 22, host: 2200, id: "ssh", auto_correct: true
+    app.vm.network "forwarded_port", guest: 8080, host: 8080, auto_correct: true
+    
+   app.vm.provider "virtualbox" do |vb|
+      vb.name = "APP_VM"
+      vb.memory = "2048" #Дав більше ресурсів бо Джава і Мавен потребують
+      vb.cpus = 2
+    end
+#Скріпт для підготовки машин для роботи
+    app.vm.provision "shell", path: "provision_app.sh", env: {
+      "DB_HOST"   => "192.168.56.10",
+      "DB_PORT"   => "3306",
+      "DB_NAME"   => ENV['DB_NAME']   || "petclinic",
+      "DB_USER"   => ENV['DB_USER']   || "petclinic",
+      "DB_PASS"   => ENV['DB_PASS']   || "petclinic",
+      "PROJECT_DIR" => "/home/vagrant/petclinic",
+      "APP_USER"  => ENV['APP_USER']  || "petclinic",
+      "APP_DIR" => "/opt/petclinic-app"
+    }
+  end
+end
