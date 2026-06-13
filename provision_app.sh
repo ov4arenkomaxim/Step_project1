@@ -22,16 +22,11 @@ if [ -d "${PROJECT_DIR}" ]; then
 fi
 git clone --depth 1 https://github.com/spring-projects/spring-petclinic.git ${PROJECT_DIR}
 
-# Права для юзера щоб запускати mvnw
-chown -R ${APP_USER}:${APP_USER} ${PROJECT_DIR}
 chmod +x ${PROJECT_DIR}/mvnw
-
-sudo -u ${APP_USER} bash -c "
-  export HOME=/home/${APP_USER}
-  export MAVEN_OPTS='-Xmx512m'
-  cd ${PROJECT_DIR}
-  ./mvnw -DskipTests package
-"
+export HOME=/root
+export MAVEN_OPTS="-Xmx512m"
+cd ${PROJECT_DIR}
+./mvnw -DskipTests package
 
 # Копіюємо jar 
 mkdir -p ${APP_DIR}
@@ -47,16 +42,11 @@ After=network.target
 [Service]
 User=${APP_USER}
 WorkingDirectory=${APP_DIR}
-Environment="DB_HOST=${DB_HOST}"
-Environment="DB_PORT=${DB_PORT}"
-Environment="DB_NAME=${DB_NAME}"
-Environment="DB_USER=${DB_USER}"
-Environment="DB_PASS=${DB_PASS}"
-ExecStart=/usr/bin/java \\
-  -Dspring.profiles.active=mysql \\
-  -Dspring.datasource.url=jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \\
-  -Dspring.datasource.username=${DB_USER} \\
-  -Dspring.datasource.password=${DB_PASS} \\
+ExecStart=/usr/bin/java \
+  -Dspring.profiles.active=mysql \
+  -Dspring.datasource.url=jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
+  -Dspring.datasource.username=${DB_USER} \
+  -Dspring.datasource.password=${DB_PASS} \
   -jar ${APP_DIR}/petclinic.jar
 Restart=always
 RestartSec=5
